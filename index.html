@@ -265,6 +265,17 @@
   .terminal-page .app-body {
     background: #000; height: 100%; color: #0f0; font-family: 'Press Start 2P', monospace; padding: 20px; font-size: 11px; overflow-y: auto; line-height: 1.5;
   }
+  .mobile-controls {
+    display: none; position: absolute; bottom: 20px; left: 0; width: 100%;
+    justify-content: space-between; padding: 0 30px; z-index: 100; pointer-events: none;
+  }
+  .ctrl-btn {
+    width: 60px; height: 60px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%; color: #fff; font-size: 24px; display: flex; align-items: center; justify-content: center;
+    pointer-events: auto; user-select: none;
+  }
+  .ctrl-btn:active { background: rgba(255,255,255,0.3); }
+  @media (max-width: 480px) { .mobile-controls { display: flex; } }
   .terminal-output { margin-bottom: 10px; word-wrap: break-word; }
   .terminal-input-line { display: flex; align-items: center; margin-top: 10px;}
   .terminal-input { background: none; border: none; color: #0f0; font-family: 'Press Start 2P', monospace; font-size: 11px; flex: 1; outline: none; margin-left: 8px; }
@@ -701,6 +712,10 @@
             <div class="game-score" id="finalScore">0</div>
             <input class="name-input" id="nameInput" placeholder="Your name" maxlength="12">
             <button class="play-btn" id="saveBtn">SAVE & RETRY</button>
+          </div>
+          <div class="mobile-controls" id="mobileControls">
+            <div class="ctrl-btn" id="btnLeft">◀</div>
+            <div class="ctrl-btn" id="btnRight">▶</div>
           </div>
         </div>
 
@@ -1153,10 +1168,11 @@ function resetGame(){
 function startGame(){
   resetGame();
   running = true;
+  lastTime = 0;
   startOverlay.style.display = 'none';
   overOverlay.style.display = 'none';
   if(animId) cancelAnimationFrame(animId);
-  loop();
+  requestAnimationFrame(loop);
 }
 function stopGame(){
   running = false;
@@ -1174,14 +1190,15 @@ function spawnObstacle(){
   });
 }
 
-function update(){
+let lastTime = 0;
+function update(dtMultiplier){
   // move player
-  if(keys.left) player.x -= player.speed;
-  if(keys.right) player.x += player.speed;
+  if(keys.left) player.x -= player.speed * dtMultiplier;
+  if(keys.right) player.x += player.speed * dtMultiplier;
   player.x = Math.max(0, Math.min(W - player.w, player.x));
 
   // spawn
-  spawnTimer++;
+  spawnTimer += dtMultiplier;
   const spawnRate = Math.max(18, 50 - Math.floor(score/5));
   if(spawnTimer > spawnRate){
     spawnObstacle();
@@ -1190,7 +1207,7 @@ function update(){
 
   // move obstacles
   for(const o of obstacles){
-    o.y += speed;
+    o.y += speed * dtMultiplier;
   }
   // remove offscreen, add score
   for(let i=obstacles.length-1;i>=0;i--){
@@ -1235,9 +1252,15 @@ function draw(){
   ctx.fillRect(player.x+17, player.y+8, 5, 5);
 }
 
-function loop(){
+function loop(timestamp){
   if(!running) return;
-  update();
+  if(!lastTime) lastTime = timestamp;
+  let dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
+  if(dt > 0.1) dt = 0.1; // cap if heavy lag
+  let dtMultiplier = dt * 60; // 1.0 at 60fps
+
+  update(dtMultiplier);
   draw();
   animId = requestAnimationFrame(loop);
 }
@@ -1262,17 +1285,14 @@ window.addEventListener('keyup', e=>{
 });
 
 function setupTouchControls(){
-  canvas.addEventListener('touchstart', handleTouch, {passive:false});
-  canvas.addEventListener('touchmove', handleTouch, {passive:false});
-  canvas.addEventListener('touchend', ()=>{ keys.left=false; keys.right=false; });
-  function handleTouch(e){
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    player.x = (x / rect.width) * W - player.w / 2;
-    if(player.x < 0) player.x = 0;
-    if(player.x > W - player.w) player.x = W - player.w;
-  }
+  const btnLeft = document.getElementById('btnLeft');
+  const btnRight = document.getElementById('btnRight');
+  
+  btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys.left = true; }, {passive:false});
+  btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys.left = false; }, {passive:false});
+  
+  btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys.right = true; }, {passive:false});
+  btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys.right = false; }, {passive:false});
 }
 setupTouchControls();
 
