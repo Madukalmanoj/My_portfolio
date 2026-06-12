@@ -1305,27 +1305,50 @@ saveBtn.addEventListener('click', ()=>{
   startGame();
 });
 
-/* ===== LEADERBOARD ===== */
-function getScores(){
-  return JSON.parse(localStorage.getItem('mp_leaderboard') || '[]');
+/* ===== GLOBAL LEADERBOARD ENGINE ===== */
+async function fetchGlobalScores(game) {
+  try {
+    const res = await fetch(`/api/scores?game=${game}`);
+    if(!res.ok) throw new Error('API error');
+    return await res.json();
+  } catch(e) {
+    console.error('Fallback to local storage', e);
+    return JSON.parse(localStorage.getItem(game + '_leaderboard') || '[]');
+  }
 }
-function saveScore(name, sc){
-  let scores = getScores();
+
+async function saveScore(name, sc){
+  // Optimistic local save
+  let scores = JSON.parse(localStorage.getItem('dodge_leaderboard') || '[]');
   scores.push({name, score: sc});
   scores.sort((a,b)=> b.score - a.score);
-  scores = scores.slice(0, 10);
-  localStorage.setItem('mp_leaderboard', JSON.stringify(scores));
+  localStorage.setItem('dodge_leaderboard', JSON.stringify(scores.slice(0, 10)));
+
+  try {
+    await fetch('/api/scores?game=dodge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, score: sc })
+    });
+  } catch(e) { console.error('Failed to save to global KV', e); }
 }
-function renderLeaderboard(){
-  const scores = getScores().slice(0,3);
-  if(scores.length === 0){
+
+async function renderLeaderboard(){
+  const lbList = document.getElementById('lbList');
+  if(!lbList) return;
+  lbList.innerHTML = '<div style="font-size:13px; color:#a8a8c0;">Loading global scores...</div>';
+  
+  const scores = await fetchGlobalScores('dodge');
+  const topScores = scores.slice(0,3);
+  
+  if(topScores.length === 0){
     lbList.innerHTML = '<div style="font-size:13px; color:#a8a8c0;">No scores yet — be the first!</div>';
     return;
   }
   const medalClass = ['gold','silver','bronze'];
-  lbList.innerHTML = scores.map((s,i)=>`
+  lbList.innerHTML = topScores.map((s,i)=>`
     <div class="lb-row">
-      <div class="lb-name"><span class="lb-rank ${medalClass[i]}">${i+1}</span>${s.name}</div>
+      <div class="lb-name"><span class="lb-rank ${medalClass[i] || ''}">${i+1}</span>${s.name}</div>
       <div style="font-weight:600;">${s.score}</div>
     </div>
   `).join('');
@@ -1453,39 +1476,54 @@ function endAGI(win) {
   if(saved) document.getElementById('agiNameInput').value = saved;
 }
 
-document.getElementById('agiSaveBtn').addEventListener('click', () => {
+document.getElementById('agiSaveBtn').addEventListener('click', async () => {
   const nameInput = document.getElementById('agiNameInput');
   const name = (nameInput.value || 'Anonymous').trim().slice(0,12);
-  localStorage.setItem('mp_player_name', name); // Share name between games
+  localStorage.setItem('mp_player_name', name); 
   
+  // Optimistic local
   let scores = JSON.parse(localStorage.getItem('agi_leaderboard') || '[]');
   scores.push({name, score: agiScore});
   scores.sort((a,b)=> b.score - a.score);
-  scores = scores.slice(0, 3);
-  localStorage.setItem('agi_leaderboard', JSON.stringify(scores));
+  localStorage.setItem('agi_leaderboard', JSON.stringify(scores.slice(0, 3)));
+
+  // Save to global DB in background
+  document.getElementById('agiSaveBtn').textContent = 'SAVING...';
+  try {
+    await fetch('/api/scores?game=agi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, score: agiScore })
+    });
+  } catch(e) { console.error('Failed to save to global KV', e); }
   
+  document.getElementById('agiSaveBtn').textContent = 'SAVE & RESTART';
   renderAGILeaderboard();
   initAGI();
 });
 
-function renderAGILeaderboard() {
+async function renderAGILeaderboard() {
   const list = document.getElementById('agiLbList');
   if(!list) return;
-  const scores = JSON.parse(localStorage.getItem('agi_leaderboard') || '[]');
-  if(scores.length === 0){
+  list.innerHTML = '<div style="font-size:13px; color:#a8a8c0;">Loading global scores...</div>';
+  
+  const scores = await fetchGlobalScores('agi');
+  const topScores = scores.slice(0,3);
+
+  if(topScores.length === 0){
     list.innerHTML = '<div style="font-size:13px; color:#a8a8c0;">No scores yet — be the first!</div>';
     return;
   }
   const medalClass = ['gold','silver','bronze'];
-  list.innerHTML = scores.map((s,i)=>`
+  list.innerHTML = topScores.map((s,i)=>`
     <div class="lb-row">
-      <div class="lb-name"><span class="lb-rank ${medalClass[i]}">${i+1}</span>${s.name}</div>
+      <div class="lb-name"><span class="lb-rank ${medalClass[i] || ''}">${i+1}</span>${s.name}</div>
       <div style="font-weight:600;">${s.score}</div>
     </div>
   `).join('');
 }
 
-// Call renderAGILeaderboard initially
+// Call initially
 renderAGILeaderboard();
 
 /* Touch controls for AGI */
