@@ -1490,10 +1490,11 @@ renderAGILeaderboard();
 
 /* Touch controls for AGI */
 let tsx, tsy;
-agiGridEl.addEventListener('touchstart', e => {
+const agiPageEl = document.getElementById('agiPage');
+agiPageEl.addEventListener('touchstart', e => {
   tsx = e.touches[0].clientX; tsy = e.touches[0].clientY;
 }, {passive:true});
-agiGridEl.addEventListener('touchend', e => {
+agiPageEl.addEventListener('touchend', e => {
   if(!tsx || !tsy) return;
   let tex = e.changedTouches[0].clientX; let tey = e.changedTouches[0].clientY;
   let dx = tex - tsx; let dy = tey - tsy;
@@ -1504,7 +1505,7 @@ agiGridEl.addEventListener('touchend', e => {
   }
   tsx = null; tsy = null;
 });
-agiGridEl.addEventListener('touchmove', e => { e.preventDefault(); }, {passive:false});
+agiPageEl.addEventListener('touchmove', e => { e.preventDefault(); }, {passive:false});
 
 window.addEventListener('keydown', e => {
   if(document.getElementById('agiPage').classList.contains('active')) {
