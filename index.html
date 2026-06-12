@@ -1297,10 +1297,14 @@ function setupTouchControls(){
 setupTouchControls();
 
 startBtn.addEventListener('click', startGame);
-saveBtn.addEventListener('click', ()=>{
+saveBtn.addEventListener('click', async ()=>{
   const name = (nameInput.value || 'Anonymous').trim().slice(0,12);
   localStorage.setItem('mp_player_name', name);
-  saveScore(name, score);
+  
+  saveBtn.textContent = 'SAVING...';
+  await saveScore(name, score);
+  saveBtn.textContent = 'SAVE & RETRY';
+  
   renderLeaderboard();
   startGame();
 });
