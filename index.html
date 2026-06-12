@@ -1258,7 +1258,7 @@ function loop(timestamp){
   let dt = (timestamp - lastTime) / 1000;
   lastTime = timestamp;
   if(dt > 0.1) dt = 0.1; // cap if heavy lag
-  let dtMultiplier = dt * 60; // 1.0 at 60fps
+  let dtMultiplier = dt * 144; // Scales game speed up to match a fast 144Hz monitor experience
 
   update(dtMultiplier);
   draw();
