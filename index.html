@@ -394,7 +394,7 @@
 
     <div class="boot-screen" id="bootScreen"></div>
     
-    <div class="lock-screen" id="lockScreen" onclick="unlockPhone()" ontouchstart="this.startY = event.touches[0].clientY" ontouchend="if(this.startY - event.changedTouches[0].clientY > 40) unlockPhone()">
+    <div class="lock-screen" id="lockScreen" onclick="unlockPhone()" onwheel="unlockPhone()" ontouchstart="this.startY = event.touches[0].clientY" ontouchend="if(this.startY - event.changedTouches[0].clientY > 40) unlockPhone()">
       <div class="lock-time" id="lockTime">00:00</div>
       <div class="lock-date" id="lockDate">Mon, Jan 1</div>
       <div class="lock-notifs">
