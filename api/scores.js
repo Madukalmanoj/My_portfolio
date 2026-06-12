@@ -1,4 +1,16 @@
+import { Redis } from '@upstash/redis';
 import { kv } from '@vercel/kv';
+
+// Automatically detect which database Vercel provided
+let db;
+if (process.env.UPSTASH_REDIS_REST_URL) {
+  db = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+} else {
+  db = kv;
+}
 
 export default async function handler(req, res) {
   // CORS Headers
@@ -19,7 +31,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const leaderboard = await kv.get(KV_KEY) || [];
+      const leaderboard = await db.get(KV_KEY) || [];
       return res.status(200).json(leaderboard);
     } catch (error) {
       console.error('KV GET Error:', error);
@@ -35,7 +47,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid payload' });
       }
 
-      let leaderboard = await kv.get(KV_KEY) || [];
+      let leaderboard = await db.get(KV_KEY) || [];
       
       leaderboard.push({ 
         name: (name || 'Anonymous').trim().slice(0, 12), 
@@ -45,7 +57,7 @@ export default async function handler(req, res) {
       leaderboard.sort((a, b) => b.score - a.score);
       leaderboard = leaderboard.slice(0, 20); // Keep top 20
 
-      await kv.set(KV_KEY, leaderboard);
+      await db.set(KV_KEY, leaderboard);
       
       return res.status(200).json(leaderboard);
     } catch (error) {
