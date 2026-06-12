@@ -1,0 +1,13 @@
+{
+  "name": "manoj-portfolio",
+  "version": "1.0.0",
+  "description": "Manoj's interactive OS portfolio with AI Chatbot",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "groq-sdk": "^0.3.2"
+  }
+}

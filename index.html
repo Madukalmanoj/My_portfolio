@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manoj.OS</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@400;500;600&display=swap');
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:'Poppins', sans-serif;
+    background:#1c1c2b;
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+
+  /* ===== PHONE FRAME ===== */
+  .phone{
+    width:360px; height:720px;
+    background:#0e0e16;
+    border-radius:36px;
+    border:8px solid #2a2a3d;
+    box-shadow:0 0 0 2px #444, 0 20px 50px rgba(0,0,0,0.5);
+    position:relative;
+    overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .notch{
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:140px; height:24px; background:#0e0e16;
+    border-radius:0 0 16px 16px; z-index:50;
+  }
+  .statusbar{
+    height:36px; flex:0 0 36px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 22px; color:#fff; font-size:13px; font-weight:500;
+    background:#1a1a2e;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen{
+    flex:1; position:relative; overflow:hidden;
+  }
+  .page{
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    overflow-y:auto;
+    background:#1a1a2e;
+    transform:translateX(100%);
+    transition:transform .35s ease, visibility 0s .35s;
+    visibility: hidden;
+    color:#e8e8f0;
+  }
+  .page.active{ 
+    transform:translateX(0); 
+    visibility: visible;
+    transition:transform .35s ease, visibility 0s;
+  }
+  .page.home{ 
+    transform:translateX(0); z-index:1;
+    visibility: visible;
+    transition:transform .35s ease, visibility 0s;
+  }
+  .page.home.hide{ 
+    transform:translateX(-100%); 
+    visibility: hidden;
+    transition:transform .35s ease, visibility 0s .35s;
+  }
+
+  /* ===== HOME SCREEN ===== */
+  .home{
+    background: url('assets/homescreen.jpg') center/cover no-repeat, linear-gradient(180deg,#2d2a55 0%, #1a1a2e 60%);
+    padding:24px 20px;
+  }
+  .home-title{
+    font-family:'Press Start 2P', cursive;
+    font-size:13px; color:#ffd166;
+    text-align:center; margin:10px 0 4px;
+    transition: color 0.3s;
+  }
+  .home-sub{
+    text-align:center; color:#111; font-size:13px; margin-bottom:24px;
+    font-weight: 600; transition: color 0.3s;
+  }
+  .app-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:20px;
+    padding:0 4px;
+  }
+  .app{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    cursor:pointer; background:none; border:none; color:#000;
+    font-family:'Poppins', sans-serif;
+    font-weight: 600; transition: color 0.3s;
+  }
+  
+  .home.dark-theme .home-title { color: #ffd166; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .home.dark-theme .home-sub { color: #e8e8f0; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .home.dark-theme .app { color: #e8e8f0; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  .app-icon{
+    width:60px; height:60px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; color:#fff;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.3);
+    position: relative; overflow: hidden;
+  }
+  .app-icon::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
+    pointer-events: none;
+  }
+  .app-icon svg{ width:28px; height:28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); stroke: #fff; fill: none; }
+  .icon-linkedin svg, .icon-github svg, .icon-game svg circle { fill: #fff; stroke: none; }
+  .back-btn svg{ width:18px; height:18px; }
+  .contact-icon svg{ width:20px; height:20px; }
+  .app-label{ font-size:12px; text-align:center; }
+
+  .icon-about{ background: linear-gradient(135deg, #7ee787 0%, #28a745 100%); }
+  .icon-projects{ background: linear-gradient(135deg, #85B7EB 0%, #007bff 100%); }
+  .icon-linkedin{ background: linear-gradient(135deg, #00A0DC 0%, #0077b5 100%); }
+  .icon-github{ background: linear-gradient(135deg, #555555 0%, #111111 100%); }
+  .icon-email{ background: linear-gradient(135deg, #ff6b6b 0%, #d44638 100%); }
+  .icon-game{ background: linear-gradient(135deg, #FF69B4 0%, #D4537E 100%); }
+  .icon-resume{ background: linear-gradient(135deg, #FAC775 0%, #ff9f43 100%); }
+
+  .dock{
+    position:absolute; bottom:14px; left:20px; right:20px;
+    background:rgba(255,255,255,0.06);
+    border-radius:20px;
+    display:flex; justify-content:space-around;
+    padding:10px 0;
+  }
+  .dock .app-icon{ width:46px; height:46px; font-size:22px; }
+  .dock .app-icon svg{ width:22px; height:22px; }
+
+  /* ===== APP PAGES ===== */
+  .app-header{
+    display:flex; align-items:center; gap:12px;
+    padding:14px 16px;
+    background:#222238;
+    position:sticky; top:0; z-index:5;
+  }
+  .back-btn{
+    background:#33334d; border:none; color:#fff;
+    width:32px; height:32px; border-radius:10px;
+    font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .app-header h2{
+    font-size:16px; font-weight:600; margin:0;
+  }
+  .app-body{ padding:18px 16px 40px; }
+
+  /* About */
+  .about-avatar{
+    width:72px; height:72px; border-radius:20px; background:#7ee787;
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; font-weight:600; color:#0e0e16; margin:0 auto 14px;
+  }
+  .about-name{ text-align:center; font-size:18px; font-weight:600; margin:0; }
+  .about-role{ text-align:center; color:#a8a8c0; font-size:13px; margin:4px 0 18px; }
+  .section-label{
+    font-size:12px; font-weight:600; color:#ffd166;
+    text-transform:uppercase; letter-spacing:1px; margin:18px 0 8px;
+  }
+  .section-label-alt { font-size:11px; text-transform:uppercase; color:#a8a8c0; margin:15px 0 8px; font-weight:600; letter-spacing:1px; }
+  .chip-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    background:#2a2a45; border:1px solid #3a3a5a; color:#cfcfe6;
+    padding:6px 10px; border-radius:10px; font-size:12px;
+  }
+  .about-body p { margin:0 0 10px; line-height:1.5; color:#cfcfe6; }
+  .about-timeline { margin-bottom:15px; border-left:2px solid #4a4a6a; padding-left:14px; margin-left:6px; }
+  .timeline-item { position: relative; margin-bottom: 16px; }
+  .timeline-item:last-child { margin-bottom: 0; }
+  .timeline-dot { position: absolute; left: -21px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #7ee787; border: 2px solid #1a1a2e; }
+
+  /* Projects */
+  .proj-card{
+    background:#222238; border:1px solid #2e2e4a;
+    border-radius:14px; padding:14px; margin-bottom:12px;
+  }
+  .proj-title{ font-size:14px; font-weight:600; margin:0 0 6px; color:#85B7EB; }
+  .proj-desc{ font-size:13px; color:#cfcfe6; line-height:1.6; margin:0 0 10px; }
+  .proj-links{ display:flex; gap:8px; flex-wrap:wrap; }
+  .proj-link{
+    font-size:12px; color:#0e0e16; background:#7ee787;
+    padding:5px 10px; border-radius:8px; text-decoration:none; font-weight:500;
+  }
+  .proj-link.alt{ background:#FAC775; }
+
+  /* Contacts */
+  .contact-row{
+    display:flex; align-items:center; gap:14px;
+    background:#222238; border-radius:14px; padding:14px;
+    margin-bottom:10px; text-decoration:none; color:#e8e8f0;
+  }
+  .contact-icon{
+    width:40px; height:40px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+    color:#0e0e16; flex-shrink:0;
+  }
+  .contact-text strong{ display:block; font-size:14px; }
+  .contact-text span{ font-size:12px; color:#a8a8c0; }
+
+  /* ===== GAME ===== */
+  .game-page .app-body{ padding:10px 12px 30px; }
+  #gameCanvas{
+    width:100%; aspect-ratio: 3/4;
+    background:#0a0a18;
+    border-radius:14px;
+    display:block;
+    touch-action:none;
+  }
+  .game-hud{
+    display:flex; justify-content:space-between; align-items:center;
+    margin:10px 0;
+    font-size:13px; color:#cfcfe6;
+  }
+  .game-score{ font-family:'Press Start 2P', cursive; font-size:14px; color:#ffd166; }
+  .leaderboard{
+    background:#222238; border-radius:14px; padding:12px 14px; margin-top:14px;
+  }
+  .lb-title{
+    font-size:12px; font-weight:600; color:#ffd166;
+    text-transform:uppercase; letter-spacing:1px; margin:0 0 10px;
+  }
+  .lb-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:14px; padding:6px 0; border-bottom:1px solid #2e2e4a;
+  }
+  .lb-row:last-child{ border-bottom:none; }
+  .lb-rank{
+    width:24px; height:24px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:600; margin-right:8px;
+    background:#33334d; color:#cfcfe6;
+  }
+  .lb-rank.gold{ background:#FAC775; color:#412402; }
+  .lb-rank.silver{ background:#B4B2A9; color:#2C2C2A; }
+  .lb-rank.bronze{ background:#D85A30; color:#4A1B0C; }
+  .lb-name{ display:flex; align-items:center; flex:1; }
+  .game-overlay{
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    background:rgba(10,10,24,0.85);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; border-radius:14px; text-align:center; padding:20px;
+    color:#fff;
+  }
+  .game-canvas-wrap{ position:relative; }
+  .name-input{
+    background:#33334d; border:1px solid #4a4a6a; color:#fff;
+    padding:8px 12px; border-radius:8px; font-size:14px; text-align:center;
+    width:160px; font-family:'Poppins', sans-serif;
+  }
+  .play-btn{
+    font-family:'Press Start 2P', cursive; font-size:11px;
+    background:#7ee787; color:#0e0e16; border:none;
+    padding:12px 20px; border-radius:10px; cursor:pointer;
+  }
+
+  /* ===== TERMINAL ===== */
+  .terminal-page .app-body {
+    background: #000; height: 100%; color: #0f0; font-family: 'Press Start 2P', monospace; padding: 20px; font-size: 11px; overflow-y: auto; line-height: 1.5;
+  }
+  .terminal-output { margin-bottom: 10px; word-wrap: break-word; }
+  .terminal-input-line { display: flex; align-items: center; margin-top: 10px;}
+  .terminal-input { background: none; border: none; color: #0f0; font-family: 'Press Start 2P', monospace; font-size: 11px; flex: 1; outline: none; margin-left: 8px; }
+  .icon-terminal { background: linear-gradient(135deg, #111, #333); }
+
+  /* ===== CHAT (Manoj AI) ===== */
+  .chat-page { background: #0e0e16; }
+  .chat-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; height: calc(100% - 130px); overflow-y: auto; }
+  .chat-msg { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.4; word-wrap: break-word; }
+  .chat-msg.bot { background: #222238; color: #cfcfe6; align-self: flex-start; border-bottom-left-radius: 4px; }
+  .chat-msg.user { background: #7ee787; color: #0e0e16; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .chat-input-area {
+    position: absolute; bottom: 0; left: 0; width: 100%; padding: 12px 16px; background: #1a1a2e;
+    display: flex; gap: 8px; border-top: 1px solid #2e2e4a;
+  }
+  .chat-input {
+    flex: 1; background: #0e0e16; border: 1px solid #33334d; color: #fff; padding: 10px 14px;
+    border-radius: 20px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none;
+  }
+  .chat-send { background: #7ee787; color: #0e0e16; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .chat-send svg { width: 18px; height: 18px; }
+  .icon-ai { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+
+  /* ===== BOOT & LOCK SCREEN ===== */
+  .boot-screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000;
+    color: #0f0; font-family: 'Press Start 2P', monospace; font-size: 12px; padding: 20px;
+    display: flex; flex-direction: column; justify-content: flex-start;
+    transition: opacity 0.5s;
+    pointer-events: none;
+  }
+  .lock-screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: url('assets/lockscreen.jpg') center/cover no-repeat, linear-gradient(180deg, #1a1a2e 0%, #0e0e16 100%);
+    z-index: 999; display: flex; flex-direction: column; align-items: center; padding: 60px 20px 20px;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .lock-screen.unlocked { transform: translateY(-100%); pointer-events: none; }
+  .lock-time { font-size: 56px; font-weight: 600; color: #fff; margin-bottom: 5px; }
+  .lock-date { font-size: 14px; color: #a8a8c0; margin-bottom: 40px; }
+  .lock-notifs { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .lock-notif { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 14px; border-radius: 14px; color: #fff; font-size: 13px; display: flex; align-items: center; gap: 12px;}
+  .lock-notif-icon { width: 32px; height: 32px; border-radius: 8px; background: #ff6b6b; display: flex; align-items: center; justify-content: center; }
+  .lock-notif-icon svg { width: 18px; height: 18px; stroke: #fff; }
+  .lock-notif-text strong { display: block; font-size: 14px; margin-bottom: 2px;}
+  .lock-notif-text span { color: #cfcfe6; font-size: 12px;}
+  .lock-swipe { position: absolute; bottom: 40px; font-size: 13px; color: #a8a8c0; display: flex; flex-direction: column; align-items: center; animation: bounce 1.5s infinite; cursor: pointer; }
+  .lock-swipe svg { width: 20px; height: 20px; margin-bottom: 4px; }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+  /* ===== MOBILE RESPONSIVENESS ===== */
+  @media (max-width: 480px) {
+    body { padding: 0; background: #0e0e16; }
+    .phone {
+      width: 100vw; height: 100vh; height: 100dvh;
+      border: none; border-radius: 0; box-shadow: none;
+    }
+    .notch { display: none; }
+    .dock { bottom: 20px; }
+  }
+  /* ===== AGI 2048 ===== */
+  .agi-body { display: flex; flex-direction: column; align-items: center; padding: 20px 10px; height: 100%; }
+  .agi-score { display: flex; justify-content: space-between; width: 100%; margin-bottom: 20px; font-family: 'Press Start 2P', monospace; font-size: 12px; color: #ffd166; }
+  .agi-grid { 
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    background: #33334d; padding: 8px; border-radius: 12px;
+    width: 300px; height: 300px;
+    touch-action: none;
+  }
+  .agi-cell { background: #1a1a2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; color: #fff; text-align: center; overflow: hidden; padding: 2px;}
+  .tier-0 { background: #1a1a2e; } 
+  .tier-1 { background: #3c3c5c; } /* Python */
+  .tier-2 { background: #4a4a7a; } /* Docker */
+  .tier-3 { background: #0077b5; } /* Pandas */
+  .tier-4 { background: #ee4c2c; } /* PyTorch */
+  .tier-5 { background: #7ee787; color: #000; } /* FastAPI */
+  .tier-6 { background: #FAC775; color: #000; } /* LangChain */
+  .tier-7 { background: #ff6b6b; color: #fff; } /* CrewAI */
+  .tier-8 { background: #85B7EB; color: #000; } /* ChromaDB */
+  .tier-9 { background: #a18cd1; color: #fff; } /* Llama 3 */
+  .tier-10{ background: #D4537E; color: #fff; } /* Agentic */
+  .tier-11{ background: #0f0; color: #000; font-family: 'Press Start 2P', monospace; font-size: 10px; box-shadow: 0 0 10px #0f0;} /* AGI! */
+  .agi-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10,10,24,0.9); display: none; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: 12px; color: #fff; z-index: 10;
+  }
+  
+  /* ===== OS BACKGROUNDS & SETTINGS ===== */
+  .os-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  #osBgImg { background-size: cover; background-position: center; opacity: 0; transition: opacity 0.5s; }
+  #bgCanvas { opacity: 0; transition: opacity 0.5s; }
+  .icon-settings { background: linear-gradient(135deg, #718096 0%, #2d3748 100%); }
+  .icon-music { background: linear-gradient(135deg, #1db954 0%, #111 100%); }
+  .icon-mail { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); }
+  .wp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; }
+  .wp-card { background: #2a2a45; border: 2px solid transparent; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; color: #cfcfe6; font-size: 12px; font-weight: 500; transition: border 0.3s; }
+  .wp-card.active { border-color: #7ee787; color: #fff; }
+  .wp-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; background: #0e0e16; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <span>● Manoj.OS</span>
+  </div>
+
+  <div class="screen">
+    
+    <!-- WALLPAPERS -->
+    <canvas id="bgCanvas" class="os-bg"></canvas>
+    <div id="osBgImg" class="os-bg"></div>
+
+    <div class="boot-screen" id="bootScreen"></div>
+    
+    <div class="lock-screen" id="lockScreen" onclick="unlockPhone()">
+      <div class="lock-time" id="lockTime">00:00</div>
+      <div class="lock-date" id="lockDate">Mon, Jan 1</div>
+      <div class="lock-notifs">
+        <div class="lock-notif">
+          <div class="lock-notif-icon" style="background:#5c5cff;"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+          <div class="lock-notif-text">
+            <strong>Did you know?</strong>
+            <span id="factText">Loading...</span>
+          </div>
+        </div>
+      </div>
+      <div class="lock-swipe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+        Swipe up to unlock
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div class="page home active" id="homePage">
+      <div class="home-title">MANOJ.OS</div>
+      <div class="home-sub">tap an app to explore</div>
+      <div class="app-grid">
+        <button class="app" onclick="openPage('aboutPage')">
+          <div class="app-icon icon-about">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
+          </div>
+          <div class="app-label">About</div>
+        </button>
+
+        <button class="app" onclick="openPage('projectsPage')">
+          <div class="app-icon icon-projects">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+          </div>
+          <div class="app-label">Projects</div>
+        </button>
+
+        <button class="app" onclick="window.open('https://www.linkedin.com/in/manojmadukal/','_blank')">
+          <div class="app-icon icon-linkedin">
+            <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          </div>
+          <div class="app-label">LinkedIn</div>
+        </button>
+
+        <button class="app" onclick="window.open('https://github.com/Madukalmanoj','_blank')">
+          <div class="app-icon icon-github">
+             <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </div>
+          <div class="app-label">GitHub</div>
+        </button>
+
+
+
+        <button class="app" onclick="openPage('chatPage')">
+          <div class="app-icon icon-ai">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="app-label">Manoj AI</div>
+        </button>
+
+        <button class="app" onclick="openPage('terminalPage')">
+          <div class="app-icon icon-terminal">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          </div>
+          <div class="app-label">Terminal</div>
+        </button>
+
+        <button class="app" onclick="openPage('gamePage')">
+          <div class="app-icon" style="background: url('assets/dodge_icon.png') center/cover no-repeat;">
+          </div>
+          <div class="app-label">Dodge!</div>
+        </button>
+        <button class="app" onclick="openPage('agiPage')">
+          <div class="app-icon" style="background: url('assets/agi_icon.png') center/cover no-repeat;">
+          </div>
+          <div class="app-label">AGI 2048</div>
+        </button>
+        <button class="app" onclick="openPage('settingsPage')">
+          <div class="app-icon icon-settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <div class="app-label">Settings</div>
+        </button>
+
+        <button class="app" onclick="openPage('mailPage')">
+          <div class="app-icon icon-mail">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div class="app-label">Mail</div>
+        </button>
+      </div>
+
+      <div class="dock">
+        <button class="app" onclick="openPage('gamePage')">
+          <div class="app-icon" style="background: url('assets/dodge_icon.png') center/cover no-repeat;">
+          </div>
+        </button>
+        <button class="app" onclick="openPage('aboutPage')">
+          <div class="app-icon icon-about">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0e0e16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
+          </div>
+        </button>
+        <button class="app" onclick="window.open('https://github.com/Madukalmanoj','_blank')">
+          <div class="app-icon icon-github">
+             <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="settingsPage">
+      <div class="app-header">
+        <button class="back-btn" onclick="closePage('settingsPage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h2>Settings</h2>
+      </div>
+      <div class="app-body">
+        <div class="section-label">Wallpapers</div>
+        <div class="wp-grid">
+          <div class="wp-card active" onclick="setWallpaper('default', this)">
+            <div style="width:100%; height:120px; border-radius:8px; margin-bottom:8px; background:linear-gradient(180deg,#2d2a55 0%, #1a1a2e 60%);"></div>
+            Minimalist
+          </div>
+          <div class="wp-card" onclick="setWallpaper('matrix', this)">
+            <div style="width:100%; height:120px; border-radius:8px; margin-bottom:8px; background:#000; position:relative; overflow:hidden;">
+              <span style="color:#0f0; font-family:monospace; position:absolute; top:10%; left:20%; font-size:10px;">1 0 1 0 1<br>0 1 1 0</span>
+              <span style="color:#0f0; font-family:monospace; position:absolute; top:30%; left:60%; font-size:10px;">1 1<br>0 1 0</span>
+            </div>
+            Matrix Rain
+          </div>
+          <div class="wp-card" onclick="setWallpaper('cyberpunk', this)">
+            <img src="assets/cyberpunk.png" alt="Cyberpunk">
+            Cyberpunk City
+          </div>
+        </div>
+        <button class="play-btn" style="margin-top:20px; width:100%;" onclick="applyWallpaper()">APPLY</button>
+      </div>
+    </div>
+
+
+    <!-- MAIL -->
+    <div class="page" id="mailPage">
+      <div class="app-header">
+        <button class="back-btn" onclick="closePage('mailPage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h2>Mail</h2>
+      </div>
+      <div class="app-body" style="padding:20px;">
+        <p style="font-size:12px; color:#a8a8c0; margin-bottom:15px; line-height:1.5;">
+          Send me a message directly!
+        </p>
+        <form action="https://formspree.io/f/mrevyvpk" method="POST" target="_blank" onsubmit="AudioEngine.playWhoosh(); setTimeout(()=>closePage('mailPage'), 500);">
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:11px; margin-bottom:4px; color:#a8a8c0;">Your Email</label>
+            <input type="email" name="email" required style="width:100%; background:#2a2a45; border:1px solid #4a4a6a; color:#fff; padding:10px; border-radius:8px; outline:none; font-family:'Poppins', sans-serif;">
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:11px; margin-bottom:4px; color:#a8a8c0;">Subject</label>
+            <input type="text" name="subject" required style="width:100%; background:#2a2a45; border:1px solid #4a4a6a; color:#fff; padding:10px; border-radius:8px; outline:none; font-family:'Poppins', sans-serif;">
+          </div>
+          <div style="margin-bottom:20px;">
+            <label style="display:block; font-size:11px; margin-bottom:4px; color:#a8a8c0;">Message</label>
+            <textarea name="message" rows="5" required style="width:100%; background:#2a2a45; border:1px solid #4a4a6a; color:#fff; padding:10px; border-radius:8px; outline:none; font-family:'Poppins', sans-serif; resize:vertical;"></textarea>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button type="submit" class="play-btn" style="width:100%; background:#ff4b2b; color:#fff; display:flex; align-items:center; justify-content:center; gap:8px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              SEND VIA FORMSPREE
+            </button>
+            <button type="button" class="play-btn" style="width:100%; background:#2a2a45; border:1px solid #4a4a6a; color:#fff; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="AudioEngine.playClick(); window.location.href='mailto:madukalmanoj@gmail.com';">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              OPEN EMAIL CLIENT
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="page" id="aboutPage">
+      <div class="app-header">
+        <button class="back-btn" onclick="closePage('aboutPage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h2>About</h2>
+      </div>
+      <div class="app-body">
+        <div class="about-avatar">MM</div>
+        <p class="about-name">Madakal Manoj</p>
+        <p class="about-role">AI Engineer · LLM / RAG / Multi-Agent Systems</p>
+        <div class="about-body">
+          <p>Passionate about pushing the boundaries of what's possible with AI. I specialize in building autonomous agents and optimizing LLMs for real-world applications.</p>
+          <p>Actively looking for LLM Engineer / GenAI Engineer roles — Hyderabad, Bangalore, or remote, with a strong preference for startups.</p>
+        </div>
+
+        <div class="section-label">Experience & Education</div>
+        <div class="about-timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <strong style="color:#fff; font-size:13px;">AI Engineering Intern</strong>
+            <span style="color:#a8a8c0; font-size:11px; display:block;">Mphasis (FedEx Client)</span>
+            <p style="font-size:12px; color:#cfcfe6; margin-top:4px; line-height:1.4;">Built production-grade RAG pipelines and multi-agent workflows to automate complex logistics data extraction and decision-making.</p>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot" style="background:#85B7EB;"></div>
+            <strong style="color:#fff; font-size:13px;">B.Tech in Computer Science</strong>
+            <span style="color:#a8a8c0; font-size:11px; display:block;">Graduating June 2026 · CGPA 9.30</span>
+            <p style="font-size:12px; color:#cfcfe6; margin-top:4px; line-height:1.4;">Focused on Artificial Intelligence, Machine Learning, and distributed systems engineering.</p>
+          </div>
+        </div>
+
+        <div class="section-label">Frameworks</div>
+        <div class="chip-grid">
+          <span class="chip">LangChain</span><span class="chip">LangGraph</span>
+          <span class="chip">CrewAI</span><span class="chip">Hermes</span>
+        </div>
+        <div class="section-label">AI / ML</div>
+        <div class="chip-grid">
+          <span class="chip">Llama 3 (PEFT/LoRA)</span><span class="chip">PyTorch</span>
+          <span class="chip">RAG</span><span class="chip">Ollama</span><span class="chip">Groq</span>
+        </div>
+        <div class="section-label">Data / Vector DBs</div>
+        <div class="chip-grid">
+          <span class="chip">ChromaDB</span><span class="chip">Pinecone</span>
+          <span class="chip">FAISS</span><span class="chip">Neo4j</span>
+        </div>
+        <div class="section-label">Backend / DevOps</div>
+        <div class="chip-grid">
+          <span class="chip">FastAPI</span><span class="chip">Docker</span>
+          <span class="chip">Spring Boot</span><span class="chip">React</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="page" id="projectsPage">
+      <div class="app-header">
+        <button class="back-btn" onclick="closePage('projectsPage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h2>Projects</h2>
+      </div>
+      <div class="app-body">
+        <div class="proj-card">
+          <div class="proj-title">Trading Agent</div>
+          <p class="proj-desc">Autonomous trading agent leveraging LLMs for strategy and execution.</p>
+          <div class="proj-links">
+            <a class="proj-link" href="https://github.com/Madukalmanoj/Trading-Agent" target="_blank">GitHub</a>
+            <a class="proj-link alt" href="https://trading-agent-prod.up.railway.app/" target="_blank">Live demo</a>
+          </div>
+        </div>
+        <div class="proj-card">
+          <div class="proj-title">TenderMind-AI</div>
+          <p class="proj-desc">AI system for CRPF tender evaluation and intelligence.</p>
+          <div class="proj-links">
+            <a class="proj-link" href="https://github.com/Madukalmanoj/TenderMind-AI" target="_blank">GitHub</a>
+            <a class="proj-link alt" href="https://tendermindai.up.railway.app/" target="_blank">Live demo</a>
+          </div>
+        </div>
+        <div class="proj-card">
+          <div class="proj-title">ReviewBot</div>
+          <p class="proj-desc">AI-powered GitHub PR review agent, deployed live on Vercel with automated migration handling.</p>
+          <div class="proj-links">
+            <a class="proj-link" href="https://github.com/Madukalmanoj/Reviewbot" target="_blank">GitHub</a>
+            <a class="proj-link alt" href="https://reviewbot2.vercel.app/" target="_blank">Live demo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="page" id="contactPage">
+      <div class="app-header">
+        <button class="back-btn" onclick="closePage('contactPage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h2>Contacts</h2>
+      </div>
+      <div class="app-body">
+        <a class="contact-row" href="mailto:youremail@example.com">
+          <div class="contact-icon" style="background:#7ee787;"><svg viewBox="0 0 24 24" fill="none" stroke="#0e0e16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+          <div class="contact-text"><strong>Email</strong><span>youremail@example.com</span></div>
+        </a>
+        <a class="contact-row" href="https://linkedin.com/in/your-profile" target="_blank">
+          <div class="contact-icon" style="background:#85B7EB;"><svg viewBox="0 0 24 24" fill="#0e0e16"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="#0e0e16" stroke-width="2"/><circle cx="8" cy="8" r="1.2"/><path d="M7 11v6h2v-6H7zm4 0v6h2v-3.2c0-1 .6-1.6 1.5-1.6s1.5.6 1.5 1.6V17h2v-3.6c0-2-1.2-3-2.8-3-1.1 0-1.8.6-2.2 1.1V11h-2z"/></svg></div>
+          <div class="contact-text"><strong>LinkedIn</strong><span>linkedin.com/in/your-profile</span></div>
+        </a>
+        <a class="contact-row" href="https://github.com/your-profile" target="_blank">
+          <div class="contact-icon" style="background:#cfcfe6;"><svg viewBox="0 0 24 24" fill="#0e0e16"><path d="M12 2C6.5 2 2 6.5 2 12c0 4.4 2.9 8.2 6.8 9.5.1-.7.2-1.7 0-2.5-.1-.7-.7-3 0-3.5-.7-1.3-1.5-3.3-.3-5.4.1-.2.5-1 1.4-1.5 1.3-.7 3.4-.4 4.1-.2.6-.4 1.6-.8 2.7-.8 1 0 2 .3 2.7.8.7-.2 2.8-.5 4.1.2.9.5 1.3 1.3 1.4 1.5 1.2 2.1.4 4.1-.3 5.4.7.5.1 2.8 0 3.5-.2.8-.1 1.8 0 2.5C19.1 20.2 22 16.4 22 12c0-5.5-4.5-10-10-10z"/></svg></div>
+          <div class="contact-text"><strong>GitHub</strong><span>github.com/your-profile</span></div>
+        </a>
+        <a class="contact-row" href="tel:+910000000000">
+          <div class="contact-icon" style="background:#FAC775;"><svg viewBox="0 0 24 24" fill="none" stroke="#0e0e16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></div>
+          <div class="contact-text"><strong>Phone</strong><span>+91 00000 00000</span></div>
+        </a>
+        <a class="contact-row" href="#">
+          <div class="contact-icon" style="background:#F0997B;"><svg viewBox="0 0 24 24" fill="none" stroke="#0e0e16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+          <div class="contact-text"><strong>Location</strong><span>Hyderabad, India</span></div>
+        </a>
+      </div>
+    </div>
+
+    <!-- GAME -->
+    <div class="page game-page" id="gamePage">
+      <div class="app-header">
+        <button class="back-btn" onclick="closePage('gamePage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h2>Dodge!</h2>
+      </div>
+      <div class="app-body">
+        <div class="game-hud">
+          <span>Score</span>
+          <span class="game-score" id="scoreDisplay">0</span>
+        </div>
+        <div class="game-canvas-wrap">
+          <canvas id="gameCanvas"></canvas>
+          <div class="game-overlay" id="startOverlay">
+            <div style="font-family:'Press Start 2P',cursive; font-size:13px; color:#ffd166;">DODGE!</div>
+            <p style="font-size:13px; color:#cfcfe6; margin:0;">Tap / hold left & right side of screen<br>or use arrow keys to dodge blocks.</p>
+            <button class="play-btn" id="startBtn">START</button>
+          </div>
+          <div class="game-overlay" id="overOverlay" style="display:none;">
+            <div style="font-family:'Press Start 2P',cursive; font-size:13px; color:#ff6b6b;">GAME OVER</div>
+            <div class="game-score" id="finalScore">0</div>
+            <input class="name-input" id="nameInput" placeholder="Your name" maxlength="12">
+            <button class="play-btn" id="saveBtn">SAVE & RETRY</button>
+          </div>
+        </div>
+
+        <div class="leaderboard">
+          <div class="lb-title">Top players</div>
+          <div id="lbList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT (Manoj AI) -->
+    <div class="page chat-page" id="chatPage">
+      <div class="app-header">
+        <button class="back-btn" onclick="closePage('chatPage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h2>Manoj AI</h2>
+      </div>
+      <div class="chat-body" id="chatBody">
+        <div class="chat-msg bot">Hello! I am Manoj AI. Ask me about Madakal Manoj's skills, experience, or projects.</div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Message Manoj AI..." onkeypress="handleChatKey(event)">
+        <button class="chat-send" onclick="sendChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+
+    <!-- TERMINAL -->
+    <div class="page terminal-page" id="terminalPage">
+      <div class="app-header">
+        <button class="back-btn" onclick="closePage('terminalPage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h2>Terminal</h2>
+      </div>
+      <div class="app-body" style="padding:0; background:#000;">
+        <div class="terminal-body" id="termBody" style="padding:16px; height:100%; overflow-y:auto; color:#0f0; font-family:'Press Start 2P', monospace; font-size:11px; line-height:1.6;">
+          <div class="terminal-output">Welcome to Manoj.OS Terminal.<br>Type 'help' for available commands.</div>
+          <div class="terminal-input-line">
+            <span>guest@manoj.os:~$</span>
+            <input type="text" class="terminal-input" id="termInput" autocomplete="off" onkeypress="handleTermKey(event)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGI 2048 -->
+    <div class="page agi-page" id="agiPage">
+      <div class="app-header">
+        <button class="back-btn" onclick="closePage('agiPage')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h2>Merge to AGI</h2>
+      </div>
+      <div class="app-body agi-body">
+        <div class="agi-score">
+          <div>SCORE: <span id="agiScore">0</span></div>
+          <div onclick="initAGI()" style="cursor:pointer;">↻ RESTART</div>
+        </div>
+        <div style="position:relative;">
+          <div class="agi-grid" id="agiGrid">
+            <!-- cells generated by JS -->
+          </div>
+          <div class="agi-overlay" id="agiOverlay">
+            <h2 id="agiMsg" style="font-family:'Press Start 2P',monospace; font-size:14px; margin-bottom:10px; color:#ff6b6b; text-align:center;">SYSTEM HALTED</h2>
+            <div class="game-score" id="agiFinalScore" style="margin-bottom:14px; font-size:16px;">0</div>
+            <input class="name-input" id="agiNameInput" placeholder="Your name" maxlength="12" style="margin-bottom:14px;">
+            <button class="play-btn" id="agiSaveBtn">SAVE & RESTART</button>
+          </div>
+        </div>
+        <p style="margin-top:20px; font-size:12px; color:#a8a8c0; text-align:center; line-height: 1.5;">
+          <b>HOW TO PLAY</b><br>
+          Use your <b>Arrow Keys</b> (or swipe) to move the tiles.<br>
+          Tiles with the same number merge into one when they touch.<br>
+          Merge identical tiles to level up your tech stack until you reach <b>2048 (AGI)</b>!
+        </p>
+
+        <div class="leaderboard" style="width:100%; max-width:300px; margin-top:20px;">
+          <div class="lb-title">Top AGI Developers</div>
+          <div id="agiLbList"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+/* ===== AUDIO ENGINE ===== */
+const AudioEngine = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) this.ctx = new AudioContext();
+    }
+  },
+  playTone(freq, type, duration, vol=0.1) {
+    if(!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + duration);
+  },
+  playBoot() {
+    this.init();
+    if(this.ctx.state === 'suspended') this.ctx.resume();
+    setTimeout(()=>this.playTone(440, 'square', 0.1, 0.1), 0);
+    setTimeout(()=>this.playTone(554, 'square', 0.1, 0.1), 100);
+    setTimeout(()=>this.playTone(659, 'square', 0.1, 0.1), 200);
+    setTimeout(()=>this.playTone(880, 'square', 0.3, 0.15), 300);
+  },
+  playClick() {
+    this.init();
+    if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    this.playTone(800, 'sine', 0.05, 0.05);
+  },
+  playType() {
+    this.init();
+    if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    this.playTone(300 + Math.random()*100, 'square', 0.03, 0.02);
+  },
+  playWhoosh() {
+    this.init();
+    if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    this.playTone(400, 'sine', 0.2, 0.1);
+  }
+};
+
+/* ===== WALLPAPERS & MATRIX RAIN ===== */
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx = bgCanvas ? bgCanvas.getContext('2d') : null;
+const osBgImg = document.getElementById('osBgImg');
+let matrixInterval;
+let pendingWallpaper = 'default';
+
+function setWallpaper(type, el) {
+  AudioEngine.playClick();
+  document.querySelectorAll('.wp-card').forEach(c => c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  pendingWallpaper = type;
+}
+
+function applyWallpaper() {
+  AudioEngine.playClick();
+  clearInterval(matrixInterval);
+  if(bgCanvas) bgCanvas.style.opacity = 0;
+  if(osBgImg) osBgImg.style.opacity = 0;
+  
+  const homeEl = document.getElementById('homePage');
+  
+  if (pendingWallpaper === 'cyberpunk') {
+    osBgImg.style.backgroundImage = "url('assets/cyberpunk.png')";
+    osBgImg.style.opacity = 1;
+    homeEl.style.background = 'transparent';
+    homeEl.classList.add('dark-theme');
+  } else if (pendingWallpaper === 'matrix') {
+    bgCanvas.style.opacity = 0.5;
+    initMatrixRain();
+    homeEl.style.background = 'transparent';
+    homeEl.classList.add('dark-theme');
+  } else {
+    homeEl.style.background = "url('assets/homescreen.jpg') center/cover no-repeat, linear-gradient(180deg,#2d2a55 0%, #1a1a2e 60%)";
+    homeEl.classList.remove('dark-theme');
+  }
+  closePage('settingsPage');
+}
+
+function initMatrixRain() {
+  if(!bgCanvas) return;
+  bgCanvas.width = window.innerWidth;
+  bgCanvas.height = window.innerHeight;
+  const chars = '01ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ'.split('');
+  const fontSize = 14;
+  const columns = bgCanvas.width / fontSize;
+  const drops = [];
+  for(let i=0; i<columns; i++) drops[i] = 1;
+  
+  matrixInterval = setInterval(() => {
+    bgCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+    bgCtx.fillStyle = '#0F0';
+    bgCtx.font = fontSize + 'px monospace';
+    for(let i=0; i<drops.length; i++) {
+      const text = chars[Math.floor(Math.random() * chars.length)];
+      bgCtx.fillText(text, i * fontSize, drops[i] * fontSize);
+      if(drops[i] * fontSize > bgCanvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }, 33);
+}
+
+window.addEventListener('resize', () => {
+  if (bgCanvas && bgCanvas.style.opacity > 0) initMatrixRain();
+});
+
+/* ===== BOOT & LOCK SCREEN ===== */
+const bootScreen = document.getElementById('bootScreen');
+const lockScreen = document.getElementById('lockScreen');
+
+const bootSequence = [
+  "Manoj.OS v2.4 Booting...",
+  "Initializing Kernel........ OK",
+  "Loading LLM Models......... OK",
+  "Mounting File System....... OK",
+  "Starting UI Engine......... OK",
+  "System Ready."
+];
+
+let bootIdx = 0;
+function runBoot() {
+  if (bootIdx < bootSequence.length) {
+    bootScreen.innerHTML += bootSequence[bootIdx] + "<br><br>";
+    bootIdx++;
+    setTimeout(runBoot, 300);
+  } else {
+    setTimeout(() => {
+      bootScreen.style.opacity = '0';
+      setTimeout(() => { bootScreen.style.display = 'none'; }, 500);
+    }, 500);
+  }
+}
+runBoot();
+
+function unlockPhone() {
+  lockScreen.classList.add('unlocked');
+  AudioEngine.playBoot();
+}
+
+function updateLockTime() {
+  const d = new Date();
+  let h = d.getHours(), m = d.getMinutes();
+  h = h % 12 || 12;
+  document.getElementById('lockTime').textContent = h + ':' + String(m).padStart(2, '0');
+  
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('lockDate').textContent = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+
+  const facts = [
+    "A day on Venus is longer than a year on Venus.",
+    "Bananas are curved because they grow towards the sun.",
+    "Octopuses have three hearts and blue blood.",
+    "Honey never spoils. You can eat 3000-year-old honey.",
+    "Wombat poop is cube-shaped to stop it from rolling away.",
+    "A jiffy is an actual unit of time: 1/100th of a second.",
+    "The Eiffel Tower can be 15 cm taller during the summer.",
+    "Cows have best friends and get stressed when separated.",
+    "Strawberries aren't berries, but bananas are!",
+    "Water makes up about 60% of the human adult body."
+  ];
+  const factText = document.getElementById('factText');
+  if (factText) {
+    factText.textContent = facts[Math.floor(Math.random() * facts.length)];
+  }
+}
+updateLockTime();
+setInterval(updateLockTime, 30000);
+
+/* ===== TERMINAL ===== */
+const termInput = document.getElementById('termInput');
+const termBody = document.getElementById('termBody');
+
+function handleTermKey(e) {
+  AudioEngine.playType();
+  if (e.key === 'Enter') {
+    const cmd = termInput.value.trim().toLowerCase();
+    termInput.value = '';
+    
+    const cmdDiv = document.createElement('div');
+    cmdDiv.innerHTML = `guest@manoj.os:~$ ${cmd}`;
+    termBody.insertBefore(cmdDiv, termInput.parentElement);
+    
+    let res = '';
+    if (cmd === 'help') {
+      res = "Available commands:<br>whoami<br>ls<br>ls projects<br>cat contact.txt<br>clear";
+    } else if (cmd === 'whoami') {
+      res = "Madakal Manoj<br>AI Engineer (LLM/RAG/Agents)<br>Final-year B.Tech CS Student.";
+    } else if (cmd === 'ls') {
+      res = "<span style='color:#85B7EB;'>projects/</span> &nbsp;&nbsp;contact.txt &nbsp;&nbsp;resume.pdf";
+    } else if (cmd === 'ls projects') {
+      res = "ReviewBot<br>TenderMind-AI<br>Trading-Agent<br>Hermes-Framework";
+    } else if (cmd === 'cat contact.txt') {
+      res = "Email: madukalmanoj@gmail.com<br>LinkedIn: linkedin.com/in/manojmadukal<br>GitHub: github.com/Madukalmanoj";
+    } else if (cmd === 'clear') {
+      termBody.innerHTML = '';
+      termBody.appendChild(termInput.parentElement);
+      termInput.focus();
+      return;
+    } else if (cmd.startsWith('mkdir')) {
+      res = "mkdir: permission denied. Guest users cannot create directories.";
+    } else if (cmd.startsWith('sudo')) {
+      res = "guest is not in the sudoers file. This incident will be reported to Manoj.";
+    } else if (cmd.startsWith('cd')) {
+      res = "bash: cd: permission denied";
+    } else if (cmd === 'pwd') {
+      res = "/home/guest";
+    } else if (cmd !== '') {
+      res = `Command not found: ${cmd}`;
+    }
+    
+    if (res) {
+      const resDiv = document.createElement('div');
+      resDiv.className = 'terminal-output';
+      resDiv.innerHTML = res;
+      termBody.insertBefore(resDiv, termInput.parentElement);
+    }
+    
+    termBody.scrollTop = termBody.scrollHeight;
+  }
+}
+
+/* ===== MANOJ AI (Real API Integration) ===== */
+const chatInput = document.getElementById('chatInput');
+const chatBody = document.getElementById('chatBody');
+
+function handleChatKey(e) {
+  if (e.key === 'Enter') sendChat();
+}
+
+async function sendChat() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  AudioEngine.playWhoosh();
+  chatInput.value = '';
+  
+  appendChat(text, 'user');
+  
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'chat-msg bot typing-indicator';
+  typingDiv.innerHTML = '<i>typing...</i>';
+  chatBody.appendChild(typingDiv);
+  chatBody.scrollTop = chatBody.scrollHeight;
+  
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    });
+    
+    chatBody.removeChild(typingDiv);
+    
+    if (response.ok) {
+      const data = await response.json();
+      appendChat(data.reply, 'bot');
+    } else {
+      appendChat("I'm currently disconnected from my brain. Please try again later!", 'bot');
+    }
+  } catch (error) {
+    if(chatBody.contains(typingDiv)) chatBody.removeChild(typingDiv);
+    appendChat("Connection error. I might be offline right now.", 'bot');
+  }
+}
+
+function appendChat(text, sender) {
+  const div = document.createElement('div');
+  div.className = `chat-msg ${sender}`;
+  if (sender === 'bot') {
+    // Parse Markdown and remove any wrapping <p> margins so it fits nicely in the chat bubble
+    div.innerHTML = marked.parse(text);
+    const paragraphs = div.querySelectorAll('p');
+    paragraphs.forEach(p => p.style.margin = '0 0 10px 0');
+    const lists = div.querySelectorAll('ul, ol');
+    lists.forEach(l => { l.style.margin = '0 0 10px 0'; l.style.paddingLeft = '20px'; });
+    // Remove bottom margin from last element to keep bubble tight
+    if (div.lastElementChild) div.lastElementChild.style.marginBottom = '0';
+  } else {
+    div.innerHTML = text.replace(/\n/g, '<br>');
+  }
+  chatBody.appendChild(div);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+/* ===== NAVIGATION ===== */
+const homePage = document.getElementById('homePage');
+function openPage(id){
+  AudioEngine.playClick();
+  homePage.classList.add('hide');
+  document.getElementById(id).classList.add('active');
+  if(id === 'gamePage') initGameCanvas();
+}
+function closePage(id){
+  AudioEngine.playClick();
+  document.getElementById(id).classList.remove('active');
+  homePage.classList.remove('hide');
+  if(id === 'gamePage') stopGame();
+}
+
+/* ===== CLOCK ===== */
+function updateClock(){
+  const d = new Date();
+  let h = d.getHours(), m = d.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('clock').textContent = h + ':' + String(m).padStart(2,'0') + ' ' + ampm;
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+/* ===== GAME: DODGE (endless obstacle dodger) ===== */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const startOverlay = document.getElementById('startOverlay');
+const overOverlay = document.getElementById('overOverlay');
+const finalScore = document.getElementById('finalScore');
+const startBtn = document.getElementById('startBtn');
+const saveBtn = document.getElementById('saveBtn');
+const nameInput = document.getElementById('nameInput');
+const lbList = document.getElementById('lbList');
+
+let W, H;
+let player, obstacles, particles;
+let score = 0, speed = 0, running = false, animId = null, spawnTimer = 0;
+let keys = {left:false, right:false};
+
+function initGameCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  ctx.scale(2,2);
+  W = rect.width; H = rect.height;
+  drawIdle();
+  renderLeaderboard();
+}
+window.addEventListener('resize', ()=>{ if(document.getElementById('gamePage').classList.contains('active')) initGameCanvas(); });
+
+function drawIdle(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0a0a18';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#33334d';
+  for(let i=0;i<5;i++){
+    ctx.fillRect(10 + i*((W-20)/5), H-30, (W-20)/5 - 6, 14);
+  }
+}
+
+function resetGame(){
+  player = { x: W/2 - 14, y: H - 50, w: 28, h: 28, speed: 5 };
+  obstacles = [];
+  particles = [];
+  score = 0;
+  speed = 2.4;
+  spawnTimer = 0;
+  scoreDisplay.textContent = '0';
+}
+
+function startGame(){
+  resetGame();
+  running = true;
+  startOverlay.style.display = 'none';
+  overOverlay.style.display = 'none';
+  if(animId) cancelAnimationFrame(animId);
+  loop();
+}
+function stopGame(){
+  running = false;
+  if(animId) cancelAnimationFrame(animId);
+}
+
+function spawnObstacle(){
+  const w = 30 + Math.random()*50;
+  obstacles.push({
+    x: Math.random() * (W - w),
+    y: -20,
+    w: w,
+    h: 18,
+    color: ['#D4537E','#85B7EB','#FAC775','#7ee787'][Math.floor(Math.random()*4)]
+  });
+}
+
+function update(){
+  // move player
+  if(keys.left) player.x -= player.speed;
+  if(keys.right) player.x += player.speed;
+  player.x = Math.max(0, Math.min(W - player.w, player.x));
+
+  // spawn
+  spawnTimer++;
+  const spawnRate = Math.max(18, 50 - Math.floor(score/5));
+  if(spawnTimer > spawnRate){
+    spawnObstacle();
+    spawnTimer = 0;
+  }
+
+  // move obstacles
+  for(const o of obstacles){
+    o.y += speed;
+  }
+  // remove offscreen, add score
+  for(let i=obstacles.length-1;i>=0;i--){
+    if(obstacles[i].y > H){
+      obstacles.splice(i,1);
+      score++;
+      scoreDisplay.textContent = score;
+      speed += 0.03;
+    }
+  }
+
+  // collision
+  for(const o of obstacles){
+    if(player.x < o.x + o.w && player.x + player.w > o.x &&
+       player.y < o.y + o.h && player.y + player.h > o.y){
+      endGame();
+      return;
+    }
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0a0a18';
+  ctx.fillRect(0,0,W,H);
+
+  // grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  for(let y=0;y<H;y+=24){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // obstacles
+  for(const o of obstacles){
+    ctx.fillStyle = o.color;
+    ctx.fillRect(o.x, o.y, o.w, o.h);
+  }
+
+  // player
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+  ctx.fillStyle = '#0a0a18';
+  ctx.fillRect(player.x+6, player.y+8, 5, 5);
+  ctx.fillRect(player.x+17, player.y+8, 5, 5);
+}
+
+function loop(){
+  if(!running) return;
+  update();
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+function endGame(){
+  running = false;
+  cancelAnimationFrame(animId);
+  finalScore.textContent = score;
+  overOverlay.style.display = 'flex';
+  const saved = localStorage.getItem('mp_player_name');
+  if(saved) nameInput.value = saved;
+}
+
+/* controls */
+window.addEventListener('keydown', e=>{
+  if(e.key === 'ArrowLeft') { keys.left = true; if(document.getElementById('gamePage').classList.contains('active')) e.preventDefault(); }
+  if(e.key === 'ArrowRight') { keys.right = true; if(document.getElementById('gamePage').classList.contains('active')) e.preventDefault(); }
+});
+window.addEventListener('keyup', e=>{
+  if(e.key === 'ArrowLeft') keys.left = false;
+  if(e.key === 'ArrowRight') keys.right = false;
+});
+
+function setupTouchControls(){
+  canvas.addEventListener('touchstart', handleTouch, {passive:false});
+  canvas.addEventListener('touchmove', handleTouch, {passive:false});
+  canvas.addEventListener('touchend', ()=>{ keys.left=false; keys.right=false; });
+  function handleTouch(e){
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    keys.left = x < rect.width/2;
+    keys.right = x >= rect.width/2;
+  }
+}
+setupTouchControls();
+
+startBtn.addEventListener('click', startGame);
+saveBtn.addEventListener('click', ()=>{
+  const name = (nameInput.value || 'Anonymous').trim().slice(0,12);
+  localStorage.setItem('mp_player_name', name);
+  saveScore(name, score);
+  renderLeaderboard();
+  startGame();
+});
+
+/* ===== LEADERBOARD ===== */
+function getScores(){
+  return JSON.parse(localStorage.getItem('mp_leaderboard') || '[]');
+}
+function saveScore(name, sc){
+  let scores = getScores();
+  scores.push({name, score: sc});
+  scores.sort((a,b)=> b.score - a.score);
+  scores = scores.slice(0, 10);
+  localStorage.setItem('mp_leaderboard', JSON.stringify(scores));
+}
+function renderLeaderboard(){
+  const scores = getScores().slice(0,3);
+  if(scores.length === 0){
+    lbList.innerHTML = '<div style="font-size:13px; color:#a8a8c0;">No scores yet — be the first!</div>';
+    return;
+  }
+  const medalClass = ['gold','silver','bronze'];
+  lbList.innerHTML = scores.map((s,i)=>`
+    <div class="lb-row">
+      <div class="lb-name"><span class="lb-rank ${medalClass[i]}">${i+1}</span>${s.name}</div>
+      <div style="font-weight:600;">${s.score}</div>
+    </div>
+  `).join('');
+}
+renderLeaderboard();
+
+/* ===== AGI 2048 (Merge to AGI) ===== */
+const agiGridEl = document.getElementById('agiGrid');
+const agiScoreEl = document.getElementById('agiScore');
+const agiOverlay = document.getElementById('agiOverlay');
+const agiMsg = document.getElementById('agiMsg');
+
+const TECH_TIERS = [
+  "", // 0
+  "2<br>Python", // 2
+  "4<br>Docker", // 4
+  "8<br>Pandas", // 8
+  "16<br>PyTorch", // 16
+  "32<br>FastAPI", // 32
+  "64<br>LangChain", // 64
+  "128<br>CrewAI", // 128
+  "256<br>ChromaDB", // 256
+  "512<br>Llama 3", // 512
+  "1024<br>Agentic", // 1024
+  "2048<br>AGI!" // 2048
+];
+
+let agiGrid = [];
+let agiScore = 0;
+
+function initAGI() {
+  agiGrid = Array(16).fill(0);
+  agiScore = 0;
+  agiOverlay.style.display = 'none';
+  spawnAGITile();
+  spawnAGITile();
+  renderAGI();
+}
+
+// Call initAGI immediately so it's ready when the page opens
+initAGI();
+
+function spawnAGITile() {
+  let empty = [];
+  for(let i=0; i<16; i++) if(agiGrid[i] === 0) empty.push(i);
+  if(empty.length > 0) {
+    let r = empty[Math.floor(Math.random() * empty.length)];
+    agiGrid[r] = Math.random() < 0.9 ? 1 : 2;
+  }
+}
+
+function renderAGI() {
+  agiGridEl.innerHTML = '';
+  agiGrid.forEach(val => {
+    let div = document.createElement('div');
+    div.className = `agi-cell tier-${val}`;
+    div.innerHTML = TECH_TIERS[val] || "";
+    agiGridEl.appendChild(div);
+  });
+  agiScoreEl.textContent = agiScore;
+}
+
+function moveAGI(dx, dy) {
+  let moved = false;
+  let newGrid = Array(16).fill(0);
+  let hasWon = false;
+  
+  for(let i=0; i<4; i++) {
+    let line = [];
+    for(let j=0; j<4; j++) {
+      let x = dx !== 0 ? (dx > 0 ? 3 - j : j) : i;
+      let y = dy !== 0 ? (dy > 0 ? 3 - j : j) : i;
+      let idx = y * 4 + x;
+      if(agiGrid[idx] > 0) line.push(agiGrid[idx]);
+    }
+    
+    // Merge
+    for(let k=0; k<line.length - 1; k++) {
+      if(line[k] === line[k+1]) {
+        line[k]++;
+        agiScore += Math.pow(2, line[k]);
+        if(line[k] === 11) hasWon = true;
+        line.splice(k+1, 1);
+        moved = true;
+      }
+    }
+    
+    // Fill back
+    for(let j=0; j<4; j++) {
+      let x = dx !== 0 ? (dx > 0 ? 3 - j : j) : i;
+      let y = dy !== 0 ? (dy > 0 ? 3 - j : j) : i;
+      let idx = y * 4 + x;
+      let val = j < line.length ? line[j] : 0;
+      if(agiGrid[idx] !== val) moved = true;
+      newGrid[idx] = val;
+    }
+  }
+  
+  if(moved) {
+    agiGrid = newGrid;
+    spawnAGITile();
+    renderAGI();
+    if(hasWon) endAGI(true);
+    else checkAGIGameOver();
+  }
+}
+
+function checkAGIGameOver() {
+  for(let i=0; i<16; i++) if(agiGrid[i] === 0) return;
+  for(let i=0; i<4; i++) {
+    for(let j=0; j<3; j++) {
+      if(agiGrid[i*4 + j] === agiGrid[i*4 + j+1]) return;
+      if(agiGrid[j*4 + i] === agiGrid[(j+1)*4 + i]) return;
+    }
+  }
+  endAGI(false);
+}
+
+function endAGI(win) {
+  agiOverlay.style.display = 'flex';
+  agiMsg.textContent = win ? "AGI ACHIEVED!" : "SYSTEM HALTED";
+  agiMsg.style.color = win ? "#0f0" : "#ff6b6b";
+  document.getElementById('agiFinalScore').textContent = agiScore;
+  const saved = localStorage.getItem('mp_player_name');
+  if(saved) document.getElementById('agiNameInput').value = saved;
+}
+
+document.getElementById('agiSaveBtn').addEventListener('click', () => {
+  const nameInput = document.getElementById('agiNameInput');
+  const name = (nameInput.value || 'Anonymous').trim().slice(0,12);
+  localStorage.setItem('mp_player_name', name); // Share name between games
+  
+  let scores = JSON.parse(localStorage.getItem('agi_leaderboard') || '[]');
+  scores.push({name, score: agiScore});
+  scores.sort((a,b)=> b.score - a.score);
+  scores = scores.slice(0, 3);
+  localStorage.setItem('agi_leaderboard', JSON.stringify(scores));
+  
+  renderAGILeaderboard();
+  initAGI();
+});
+
+function renderAGILeaderboard() {
+  const list = document.getElementById('agiLbList');
+  if(!list) return;
+  const scores = JSON.parse(localStorage.getItem('agi_leaderboard') || '[]');
+  if(scores.length === 0){
+    list.innerHTML = '<div style="font-size:13px; color:#a8a8c0;">No scores yet — be the first!</div>';
+    return;
+  }
+  const medalClass = ['gold','silver','bronze'];
+  list.innerHTML = scores.map((s,i)=>`
+    <div class="lb-row">
+      <div class="lb-name"><span class="lb-rank ${medalClass[i]}">${i+1}</span>${s.name}</div>
+      <div style="font-weight:600;">${s.score}</div>
+    </div>
+  `).join('');
+}
+
+// Call renderAGILeaderboard initially
+renderAGILeaderboard();
+
+/* Touch controls for AGI */
+let tsx, tsy;
+agiGridEl.addEventListener('touchstart', e => {
+  tsx = e.touches[0].clientX; tsy = e.touches[0].clientY;
+}, {passive:true});
+agiGridEl.addEventListener('touchend', e => {
+  if(!tsx || !tsy) return;
+  let tex = e.changedTouches[0].clientX; let tey = e.changedTouches[0].clientY;
+  let dx = tex - tsx; let dy = tey - tsy;
+  if(Math.abs(dx) > Math.abs(dy)) {
+    if(Math.abs(dx) > 30) moveAGI(dx > 0 ? 1 : -1, 0);
+  } else {
+    if(Math.abs(dy) > 30) moveAGI(0, dy > 0 ? 1 : -1);
+  }
+  tsx = null; tsy = null;
+});
+
+window.addEventListener('keydown', e => {
+  if(document.getElementById('agiPage').classList.contains('active')) {
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+    if(e.key === 'ArrowLeft') moveAGI(-1, 0);
+    if(e.key === 'ArrowRight') moveAGI(1, 0);
+    if(e.key === 'ArrowUp') moveAGI(0, -1);
+    if(e.key === 'ArrowDown') moveAGI(0, 1);
+  }
+});
+
+</script>
+
+</body>
+</html>
