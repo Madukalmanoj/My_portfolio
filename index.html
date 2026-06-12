@@ -9,11 +9,10 @@
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@400;500;600&display=swap');
 
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0; padding:0;}
+  html,body{margin:0; padding:0; overscroll-behavior-y: none; overflow: hidden; width: 100%; height: 100%;}
   body{
     font-family:'Poppins', sans-serif;
     background:#1c1c2b;
-    min-height:100vh;
     display:flex; align-items:center; justify-content:center;
     padding:20px;
   }
@@ -47,7 +46,7 @@
   }
   .page{
     position:absolute; top:0; left:0; width:100%; height:100%;
-    overflow-y:auto;
+    overflow-y:auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;
     background:#1a1a2e;
     transform:translateX(100%);
     transition:transform .35s ease, visibility 0s .35s;
@@ -384,7 +383,7 @@
 
     <div class="boot-screen" id="bootScreen"></div>
     
-    <div class="lock-screen" id="lockScreen" onclick="unlockPhone()">
+    <div class="lock-screen" id="lockScreen" onclick="unlockPhone()" ontouchstart="this.startY = event.touches[0].clientY" ontouchend="if(this.startY - event.changedTouches[0].clientY > 40) unlockPhone()">
       <div class="lock-time" id="lockTime">00:00</div>
       <div class="lock-date" id="lockDate">Mon, Jan 1</div>
       <div class="lock-notifs">
@@ -1270,8 +1269,9 @@ function setupTouchControls(){
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const x = e.touches[0].clientX - rect.left;
-    keys.left = x < rect.width/2;
-    keys.right = x >= rect.width/2;
+    player.x = (x / rect.width) * W - player.w / 2;
+    if(player.x < 0) player.x = 0;
+    if(player.x > W - player.w) player.x = W - player.w;
   }
 }
 setupTouchControls();
@@ -1484,6 +1484,7 @@ agiGridEl.addEventListener('touchend', e => {
   }
   tsx = null; tsy = null;
 });
+agiGridEl.addEventListener('touchmove', e => { e.preventDefault(); }, {passive:false});
 
 window.addEventListener('keydown', e => {
   if(document.getElementById('agiPage').classList.contains('active')) {
